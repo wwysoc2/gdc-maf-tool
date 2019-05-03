@@ -15,9 +15,12 @@ usage: python gdc-maf-cat.py <-m MANIFEST or -p PROJECT_ID>
 
 optional arguments:
   -h, --help            show this help message and exit
+
   -m MANIFEST, --manifest MANIFEST
                         Specify MAF files with GDC Manifest
+
   -p PROJECT, --project PROJECT
                         Specify MAF files by project
+
   -o FILE_PREFIX, --output FILE_PREFIX
                         Designates a name for the output file
