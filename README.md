@@ -14,6 +14,7 @@ usage: python gdc-maf-cat.py <-m MANIFEST or -p PROJECT_ID>
 ----GDC MAF Concatenation Tool v1.0----
 
 optional arguments:
+
   -h, --help            show this help message and exit
 
   -m MANIFEST, --manifest MANIFEST
