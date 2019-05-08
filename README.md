@@ -2,7 +2,7 @@
 
 Easy GDC MAF file concatenation
 
-The GDC MAF Concatenation Tool automatically downloads a set of open-access XXXX MAFs from the Genomic Data Commons and concatenates them.  Each subset of MAFs can be specified using a manifest downloaded from the GDC Data Portal (https://portal.gdc.cancer.gov) or using project IDs.  
+The GDC MAF Concatenation Tool automatically downloads a set of open-access MAFs from the Genomic Data Commons and concatenates them.  Each subset of MAFs can be specified using a manifest downloaded from the GDC Data Portal (https://portal.gdc.cancer.gov) or using project IDs.  
 
 Either a manifest (-m) or project (-p) must be specified. More than one project can be specified by passing a comma-delimited string with no spaces; i.e. TCGA-LUAD,TCGA-LUSC
 
