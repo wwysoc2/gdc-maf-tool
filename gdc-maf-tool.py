@@ -21,7 +21,7 @@ def arg_parse():
         dest = 'o', type = str, default = "outfile.maf",
         help = 'Designates a name for the output file')
     parser.add_argument('--metrics_only', action = "store_true",
-        help = 'Only return metrics, do not output concatenated MAF.')
+        dest = 'mo', help = 'Only return metrics, do not output concatenated MAF.')
     args = parser.parse_args()
     return args
 
@@ -29,7 +29,7 @@ def main(args):
     '''
     Retrieves and parses the arguments
     '''
-    global use_manifest, output_file, manifest_path, project_string
+    global use_manifest, output_file, manifest_path, project_string, mo
     if args.manifest: 
         use_manifest = True
         manifest_path = args.manifest
@@ -41,7 +41,9 @@ def main(args):
         error_parse("both_argue")
     if not args.manifest and not args.project:
         error_parse("no_argue")
-
+    mo = False
+    if args.mo:
+        mo = True
 
 def error_parse(code):
     '''
@@ -212,6 +214,7 @@ def execute():
         jsonified, keys = jsonify_maf(maf_list)
         cat_maf += jsonified
     calc_basic_metrics(cat_maf)
-    back_to_tsv(cat_maf, keys, output_file)
+    if mo == False:
+        back_to_tsv(cat_maf, keys, output_file)
 
 execute()
