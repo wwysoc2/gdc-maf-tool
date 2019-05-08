@@ -17,9 +17,11 @@ def arg_parse():
         help = 'Specify MAF files with GDC Manifest')
     parser.add_argument('-p', '--project', action = "store",
         help = 'Specify MAF files by project')
-    parser.add_argument('-o', '--output', metavar = 'FILE_PREFIX',
-        action = "store", dest = 'o', type = str, default = "outfile.maf",
+    parser.add_argument('-o', '--output', action = "store", 
+        dest = 'o', type = str, default = "outfile.maf",
         help = 'Designates a name for the output file')
+    parser.add_argument('--metrics_only', action = "store_true",
+        help = 'Only return metrics, do not output concatenated MAF.')
     args = parser.parse_args()
     return args
 
@@ -181,6 +183,18 @@ def check_md5sum(file_name, exp_md5, tmpdir):
     if exp_md5 != hash_md5.hexdigest():
         error_parse("md5sum_mis")
 
+def output_json_file(json_obj, name):
+    json.dump(json_obj, open("{}.json".format(name), "w"), indent=4)
+    
+def calc_basic_metrics(maf_dict):
+    gene_list = []
+    case_list = []
+    for entry in maf_dict:
+        gene_list.append(str(entry["Entrez_Gene_Id"]))
+        case_list.append(entry["case_id"])
+    print "{} Genes".format(str(len(set(gene_list))))
+    print "{} Cases".format(str(len(set(case_list))))
+
 
 def execute():
     main(arg_parse())
@@ -197,6 +211,7 @@ def execute():
         maf_list = strip_maf_header(gzip.open("/".join([tmpdir,single_maf["file_name"]]), "r"))
         jsonified, keys = jsonify_maf(maf_list)
         cat_maf += jsonified
+    calc_basic_metrics(cat_maf)
     back_to_tsv(cat_maf, keys, output_file)
 
 execute()
