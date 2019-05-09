@@ -8,6 +8,7 @@ import hashlib
 import gzip
 import argparse
 import datetime
+import logging
 
 def arg_parse():
     parser = argparse.ArgumentParser(
@@ -44,22 +45,33 @@ def main(args):
     mo = False
     if args.mo:
         mo = True
+        if args.mo and args.o:
+            info_parse("Warning: Metrics-Only mode selected. No data will be written to {}".format(args.o))
 
 def error_parse(code):
     '''
-    Generates the error messages
+    Generates the ERROR messages
     '''
     error = {
         "bad_manifest": "Input must be valid GDC Manifest. " \
-        "\n\tGo to https://portal.gdc.cancer.gov/ to download a manifest",
+        "\tGo to https://portal.gdc.cancer.gov/ to download a manifest",
         "no_result": "Query produced no results",
         "no_argue": "No argument detected, please use the -p or -m flags",
         "both_argue": "Must choose either -p OR -m, not both.",
         "md5sum_mis": "Expected md5sum does not match file's md5sum value",
         "max_retry" : "Maximum retries exceeded" 
     }
-    print("ERROR: " + error[code])
+    logger = get_logger("GDC-MAF-Tool")
+    logger.error(error[code])
     sys.exit(2)
+
+def info_parse(message):
+    '''
+    Generates the INFO messages
+    '''
+    logger = get_logger("GDC-MAF-Tool")
+    logger.info(message)    
+
 
 def strip_maf_header(maf_file):
     '''
@@ -90,7 +102,8 @@ def back_to_tsv(full_dict, col_order, prefix):
     dict_writer = csv.DictWriter(open("{}".format(prefix), "w"), col_order, delimiter='\t')            
     dict_writer.writeheader()
     dict_writer.writerows(full_dict)
-
+    info_parse("Concatenated MAF written to: {}".format(prefix))
+    
 def read_in_manifest(manifest_path):
     '''
     Reads in a GDC Manifest to parse out UUIDs
@@ -146,13 +159,13 @@ def download_maf(single_maf_dict, tmpdir):
     retry_num = 0
     while retry == True and retry_num < 3:
         data_endpt = "https://api.gdc.cancer.gov/data/{}".format(file_id)
-        print "> {} | Downloading File | {} |".format(datetime.datetime.now(), file_id)
+        info_parse("> {} | Downloading File | {} |".format(datetime.datetime.now(), file_id))
         response = requests.get(data_endpt, headers = {"Content-Type": "application/json"})
         if response.status_code == 200:
             retry = False
         else:
             retry_num += 1
-            print "> -- Retrying Download..."
+            info_parse("> -- Retrying Download...")
     if retry == False:
         response_head_cd = response.headers["Content-Disposition"]
         file_name = re.findall("filename=(.+)", response_head_cd)[0]
@@ -171,7 +184,7 @@ def download_run(id_list):
         os.mkdir(tmpdir)
     for single_maf in id_list:
         download_maf(single_maf, tmpdir)
-    print ">-- All MAF Downloads Complete"
+    info_parse("- All MAF Downloads Complete")
     return id_list, tmpdir
 
 def check_md5sum(file_name, exp_md5, tmpdir):
@@ -187,16 +200,39 @@ def check_md5sum(file_name, exp_md5, tmpdir):
 
 def output_json_file(json_obj, name):
     json.dump(json_obj, open("{}.json".format(name), "w"), indent=4)
-    
+
 def calc_basic_metrics(maf_dict):
     gene_list = []
     case_list = []
+    mutation_list = []
     for entry in maf_dict:
         gene_list.append(str(entry["Entrez_Gene_Id"]))
         case_list.append(entry["case_id"])
-    print "{} Genes".format(str(len(set(gene_list))))
-    print "{} Cases".format(str(len(set(case_list))))
+        mutation = ":".join([str(entry["Entrez_Gene_Id"]),str(entry["Start_Position"]),str(entry["End_Position"]),str(entry["Chromosome"])])
+        mutation_list.append(mutation)
+    for message in ["---Basic-Metrics---",
+        ">-- {} Genes".format(str(len(set(gene_list)))),
+        ">-- {} Cases".format(str(len(set(case_list)))),
+        ">-- {} Mutations".format(str(len(set(mutation_list))))]:
+        info_parse(message)
 
+def date_file_format(datetime_str):
+    new_str = str(datetime_str).split('.')[0].replace(":", "_").replace(" ", "_")
+    return new_str
+
+def get_logger(name):
+    global loggers
+    if loggers.get(name):
+        return loggers.get(name)
+    else:
+        logger = logging.getLogger(name)
+        handler = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter('[%(asctime)s][%(name)10s][%(levelname)7s] %(message)s')
+        handler.setFormatter(formatter)
+        logger.setLevel(logging.INFO)
+        logger.addHandler(handler)
+        loggers[name] = logger
+        return logger
 
 def execute():
     main(arg_parse())
@@ -217,4 +253,5 @@ def execute():
     if mo == False:
         back_to_tsv(cat_maf, keys, output_file)
 
+loggers = {}
 execute()
