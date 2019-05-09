@@ -27,9 +27,7 @@ def arg_parse():
     return args
 
 def main(args):
-    '''
-    Retrieves and parses the arguments
-    '''
+    """ Retrieves and parses the arguments """
     global use_manifest, output_file, manifest_path, project_string, mo
     if args.manifest: 
         use_manifest = True
@@ -49,9 +47,7 @@ def main(args):
             info_parse("Warning: Metrics-Only mode selected. No data will be written to {}".format(args.o))
 
 def error_parse(code):
-    '''
-    Generates the ERROR messages
-    '''
+    """ Generates the ERROR messages """
     error = {
         "bad_manifest": "Input must be valid GDC Manifest. " \
         "\tGo to https://portal.gdc.cancer.gov/ to download a manifest",
@@ -66,17 +62,13 @@ def error_parse(code):
     sys.exit(2)
 
 def info_parse(message):
-    '''
-    Generates the INFO messages
-    '''
+    """ Generates the INFO messages """
     logger = get_logger("GDC-MAF-Tool")
     logger.info(message)    
 
 
 def strip_maf_header(maf_file):
-    '''
-    Removes the MAF header
-    '''
+    """ Removes the MAF header """
     maf_list = []
     header = {}
     for line in maf_file:
@@ -89,9 +81,7 @@ def strip_maf_header(maf_file):
     return maf_list,header
 
 def merge_maf_headers(header_json, output_file):
-    '''
-    Merges the headers from all MAFs to cut down on duplication
-    '''
+    """ Merges the headers from all MAFs to cut down on duplication """
     keylist = []
     for single in header_json:
         keylist.extend(single.keys())
@@ -107,9 +97,7 @@ def merge_maf_headers(header_json, output_file):
     o.close
 
 def jsonify_maf(maf_file):
-    '''
-    Converts MAF TSV to dict, requires header is stripped.
-    '''
+    """ Converts MAF TSV to dict, requires header is stripped. """
     master_dict = []
     keys = maf_file[0].strip().split("\t")
     for line in maf_file[1:]:
@@ -119,18 +107,14 @@ def jsonify_maf(maf_file):
     return master_dict, keys
 
 def back_to_tsv(full_dict, col_order, prefix):
-    '''
-    Converts full concatenated dict to TSV for writing out
-    '''
+    """ Converts full concatenated dict to TSV for writing out """
     dict_writer = csv.DictWriter(open("{}".format(prefix), "a"), col_order, delimiter='\t')            
     dict_writer.writeheader()
     dict_writer.writerows(full_dict)
     info_parse("Concatenated MAF written to: {}".format(prefix))
     
 def read_in_manifest(manifest_path):
-    '''
-    Reads in a GDC Manifest to parse out UUIDs
-    '''
+    """ Reads in a GDC Manifest to parse out UUIDs """
     manifest_file = open(manifest_path, "r").read().splitlines()
     id_list = []
     if manifest_file[0].strip().split("\t")[0] != "id":
@@ -140,9 +124,7 @@ def read_in_manifest(manifest_path):
     return id_list
 
 def retrieve_ids_by_project(provided, project):
-    '''
-    Retrieves IDs when provided a project_id or list of UUIDs
-    '''
+    """ Retrieves IDs when provided a project_id or list of UUIDs """
     id_list = []
     endpt = "https://api.gdc.cancer.gov/files"
     filters = [
@@ -174,9 +156,7 @@ def retrieve_ids_by_project(provided, project):
     return id_list
 
 def download_maf(single_maf_dict, tmpdir):
-    '''
-    Downloads each MAF file and stores in tmp directory
-    '''
+    """ Downloads each MAF file and stores in tmp directory """
     file_id, exp_md5 = single_maf_dict["file_id"], single_maf_dict["md5sum"]
     retry = True
     retry_num = 0
@@ -199,9 +179,7 @@ def download_maf(single_maf_dict, tmpdir):
         error_parse("max_retry")
 
 def download_run(id_list):
-    '''
-    Runs MAF download for multiple and performed per-session tasks
-    '''
+    """ Runs MAF download for multiple and performed per-session tasks """
     tmpdir = "tmpMAF_" + str(datetime.datetime.now()).split(" ")[0]
     if not os.path.exists(tmpdir):
         os.mkdir(tmpdir)
@@ -211,9 +189,7 @@ def download_run(id_list):
     return id_list, tmpdir
 
 def check_md5sum(file_name, exp_md5, tmpdir):
-    '''
-    Checks the MD5SUM matches the one in the GDC index
-    '''
+    """ Checks that the MD5SUM matches the one in the GDC index """
     hash_md5 = hashlib.md5()
     with open("/".join([tmpdir, file_name]), "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -221,10 +197,8 @@ def check_md5sum(file_name, exp_md5, tmpdir):
     if exp_md5 != hash_md5.hexdigest():
         error_parse("md5sum_mis")
 
-def output_json_file(json_obj, name):
-    json.dump(json_obj, open("{}.json".format(name), "w"), indent=4)
-
 def calc_basic_metrics(maf_dict):
+    """ Calculates gene/case/mutation counts """
     gene_list = []
     case_list = []
     mutation_list = []
@@ -238,10 +212,6 @@ def calc_basic_metrics(maf_dict):
         "> {} Cases".format(str(len(set(case_list)))),
         "> {} Mutations".format(str(len(set(mutation_list))))]:
         info_parse(message)
-
-def date_file_format(datetime_str):
-    new_str = str(datetime_str).split('.')[0].replace(":", "_").replace(" ", "_")
-    return new_str
 
 def get_logger(name):
     global loggers
