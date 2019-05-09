@@ -8,7 +8,6 @@ Either a manifest (-m) or project (-p) must be specified. More than one project 
 
 Each file downloaded is checked automatically for integrity by comparing the observed (file) and expected (API) md5sum.  
 
-
 usage: python gdc-maf-cat.py <-m MANIFEST or -p PROJECT_ID>
 
 ----GDC MAF Concatenation Tool v1.0----
@@ -23,5 +22,7 @@ optional arguments:
   -p PROJECT, --project PROJECT
                         Specify MAF files by project
 
-  -o FILE_PREFIX, --output FILE_PREFIX
+  -o OUTPUT, --output OUTPUT
                         Designates a name for the output file
+
+  --metrics_only        Only return metrics, do not output concatenated MAF.

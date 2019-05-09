@@ -19,7 +19,7 @@ def arg_parse():
     parser.add_argument('-p', '--project', action = "store",
         help = 'Specify MAF files by project')
     parser.add_argument('-o', '--output', action = "store", 
-        dest = 'o', type = str, default = "outfile.maf",
+        default = "outfile.maf",
         help = 'Designates a name for the output file')
     parser.add_argument('--metrics_only', action = "store_true",
         dest = 'mo', help = 'Only return metrics, do not output concatenated MAF.')
@@ -35,7 +35,7 @@ def main(args):
     if args.project: 
         use_manifest = False
         project_string = args.project
-    if args.o: output_file = args.o
+    if args.output: output_file = args.output
     if args.manifest and args.project:
         error_parse("both_argue")
     if not args.manifest and not args.project:
