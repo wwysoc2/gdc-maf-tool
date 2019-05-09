@@ -43,7 +43,7 @@ def main(args):
     mo = False
     if args.mo:
         mo = True
-        if args.mo and args.o:
+        if args.mo and args.output:
             info_parse("Warning: Metrics-Only mode selected. No data will be written to {}".format(args.o))
 
 def error_parse(code):
