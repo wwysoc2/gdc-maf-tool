@@ -207,7 +207,7 @@ def download_run(id_list):
         os.mkdir(tmpdir)
     for single_maf in id_list:
         download_maf(single_maf, tmpdir)
-    info_parse("- All MAF Downloads Complete")
+    info_parse("> All MAF Downloads Complete")
     return id_list, tmpdir
 
 def check_md5sum(file_name, exp_md5, tmpdir):
@@ -233,10 +233,10 @@ def calc_basic_metrics(maf_dict):
         case_list.append(entry["case_id"])
         mutation = ":".join([str(entry["Entrez_Gene_Id"]),str(entry["Start_Position"]),str(entry["End_Position"]),str(entry["Chromosome"])])
         mutation_list.append(mutation)
-    for message in ["---Basic-Metrics---",
-        ">-- {} Genes".format(str(len(set(gene_list)))),
-        ">-- {} Cases".format(str(len(set(case_list)))),
-        ">-- {} Mutations".format(str(len(set(mutation_list))))]:
+    for message in ["> ---Basic-Metrics---",
+        "> {} Genes".format(str(len(set(gene_list)))),
+        "> {} Cases".format(str(len(set(case_list)))),
+        "> {} Mutations".format(str(len(set(mutation_list))))]:
         info_parse(message)
 
 def date_file_format(datetime_str):
