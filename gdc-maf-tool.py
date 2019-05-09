@@ -78,10 +78,33 @@ def strip_maf_header(maf_file):
     Removes the MAF header
     '''
     maf_list = []
+    header = {}
     for line in maf_file:
         if line[0] != "#":
             maf_list.append(line)    
-    return maf_list
+        elif line[0] == "#":
+            key, value = line[1:].strip().split(" ")
+            header[key] = value
+
+    return maf_list,header
+
+def merge_maf_headers(header_json, output_file):
+    '''
+    Merges the headers from all MAFs to cut down on duplication
+    '''
+    keylist = []
+    for single in header_json:
+        keylist.extend(single.keys())
+        keylist = list(set(keylist))
+    o = open(output_file, "w")
+    for key in keylist:
+        one_key = []
+        for single in header_json:
+            one_key.append(single[key])
+            one_key = list(set(one_key))
+        header_line = "#{} {}".format(key, ";".join(one_key))
+        o.write(header_line + "\n")
+    o.close
 
 def jsonify_maf(maf_file):
     '''
@@ -99,7 +122,7 @@ def back_to_tsv(full_dict, col_order, prefix):
     '''
     Converts full concatenated dict to TSV for writing out
     '''
-    dict_writer = csv.DictWriter(open("{}".format(prefix), "w"), col_order, delimiter='\t')            
+    dict_writer = csv.DictWriter(open("{}".format(prefix), "a"), col_order, delimiter='\t')            
     dict_writer.writeheader()
     dict_writer.writerows(full_dict)
     info_parse("Concatenated MAF written to: {}".format(prefix))
@@ -245,12 +268,17 @@ def execute():
 
     id_list, tmpdir  = download_run(maf_ids)
 
+    header = []
     for single_maf in id_list:
-        maf_list = strip_maf_header(gzip.open("/".join([tmpdir,single_maf["file_name"]]), "r"))
+        maf_list, header_json = strip_maf_header(gzip.open("/".join([tmpdir,single_maf["file_name"]]), "r"))
+        header.append(header_json)
         jsonified, keys = jsonify_maf(maf_list)
         cat_maf += jsonified
+
     calc_basic_metrics(cat_maf)
+    
     if mo == False:
+        merge_maf_headers(header, output_file)
         back_to_tsv(cat_maf, keys, output_file)
 
 loggers = {}
